@@ -1,6 +1,7 @@
 import type { SVGProps } from 'react'
 
 import * as Checkbox from '@radix-ui/react-checkbox'
+import clsx from 'clsx'
 
 import { api } from '@/utils/client/api'
 
@@ -67,22 +68,57 @@ export const TodoList = () => {
   const { data: todos = [] } = api.todo.getAll.useQuery({
     statuses: ['completed', 'pending'],
   })
+  const apiContext = api.useContext()
 
+  const { mutate: changeTodoStatus } = api.todoStatus.update.useMutation({
+    onSuccess: () => {
+      apiContext.todo.getAll.refetch()
+    },
+  })
+
+  const handleChangeTodoStatus = (
+    todoId: number,
+    status: 'completed' | 'pending'
+  ) => {
+    changeTodoStatus({
+      todoId,
+      status,
+    })
+  }
   return (
     <ul className="grid grid-cols-1 gap-y-3">
       {todos.map((todo) => (
         <li key={todo.id}>
-          <div className="flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm">
+          <div
+            className={clsx(
+              'flex items-center rounded-12 border border-gray-200 px-4 py-3 shadow-sm',
+              todo.status === 'completed' && 'bg-gray-50'
+            )}
+          >
             <Checkbox.Root
               id={String(todo.id)}
               className="flex h-6 w-6 items-center justify-center rounded-6 border border-gray-300 focus:border-gray-700 focus:outline-none data-[state=checked]:border-gray-700 data-[state=checked]:bg-gray-700"
+              checked={todo.status === 'completed'}
+              onCheckedChange={(isChecked) => {
+                handleChangeTodoStatus(
+                  todo.id,
+                  isChecked ? 'completed' : 'pending'
+                )
+              }}
             >
               <Checkbox.Indicator>
                 <CheckIcon className="h-4 w-4 text-white" />
               </Checkbox.Indicator>
             </Checkbox.Root>
 
-            <label className="block pl-3 font-medium" htmlFor={String(todo.id)}>
+            <label
+              className={clsx(
+                'todo-name block flex-1 pl-3 font-medium',
+                todo.status === 'completed' &&
+                  'text-decoration-skip-ink-none text-gray-500 underline underline-offset-[-40%]'
+              )}
+              htmlFor={String(todo.id)}
+            >
               {todo.body}
             </label>
           </div>
