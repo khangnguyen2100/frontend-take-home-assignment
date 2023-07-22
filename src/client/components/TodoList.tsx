@@ -63,13 +63,19 @@ import { api } from '@/utils/client/api'
  * Documentation references:
  *  - https://auto-animate.formkit.com
  */
-
-export const TodoList = () => {
+interface TodoListProps {
+  selectedStatus: string
+}
+export const TodoList = ({ selectedStatus }: TodoListProps) => {
   const apiContext = api.useContext()
   const [todoListRef] = useAutoAnimate()
 
   const { data: todos = [] } = api.todo.getAll.useQuery({
-    statuses: ['completed', 'pending'],
+    // if all filter all statuses, otherwise filter by selected status
+    statuses:
+      selectedStatus === 'all'
+        ? ['pending', 'completed']
+        : ([selectedStatus] as Array<'completed' | 'pending'>),
   })
 
   const { mutate: changeTodoStatus, isLoading: isDeletingTodo } =
@@ -129,7 +135,7 @@ export const TodoList = () => {
 
             <label
               className={clsx(
-                'todo-name block flex-1 pl-3 font-medium',
+                'todo-name block flex-1 truncate pl-3 font-medium',
                 todo.status === 'completed' &&
                   'text-decoration-skip-ink-none text-gray-500 underline underline-offset-[-40%]'
               )}
