@@ -1,7 +1,7 @@
-import type { SVGProps } from 'react'
-
+import { useAutoAnimate } from '@formkit/auto-animate/react'
 import * as Checkbox from '@radix-ui/react-checkbox'
 import clsx from 'clsx'
+import { type SVGProps } from 'react'
 
 import { api } from '@/utils/client/api'
 
@@ -66,6 +66,8 @@ import { api } from '@/utils/client/api'
 
 export const TodoList = () => {
   const apiContext = api.useContext()
+  const [todoListRef] = useAutoAnimate()
+
   const { data: todos = [] } = api.todo.getAll.useQuery({
     statuses: ['completed', 'pending'],
   })
@@ -100,7 +102,7 @@ export const TodoList = () => {
       })
   }
   return (
-    <ul className="grid grid-cols-1 gap-y-3">
+    <ul className="grid grid-cols-1 gap-y-3" ref={todoListRef}>
       {todos.map((todo) => (
         <li key={todo.id}>
           <div
