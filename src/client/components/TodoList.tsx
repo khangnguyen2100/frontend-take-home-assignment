@@ -65,12 +65,19 @@ import { api } from '@/utils/client/api'
  */
 
 export const TodoList = () => {
+  const apiContext = api.useContext()
   const { data: todos = [] } = api.todo.getAll.useQuery({
     statuses: ['completed', 'pending'],
   })
-  const apiContext = api.useContext()
 
-  const { mutate: changeTodoStatus } = api.todoStatus.update.useMutation({
+  const { mutate: changeTodoStatus, isLoading: isDeletingTodo } =
+    api.todoStatus.update.useMutation({
+      onSuccess: () => {
+        apiContext.todo.getAll.refetch()
+      },
+    })
+
+  const { mutate: deleteTodo } = api.todo.delete.useMutation({
     onSuccess: () => {
       apiContext.todo.getAll.refetch()
     },
@@ -84,6 +91,13 @@ export const TodoList = () => {
       todoId,
       status,
     })
+  }
+  const handleDeleteTodo = (todoId: number) => {
+    // show confirm dialog before deleting
+    confirm('Are you sure you want to delete this todo?') &&
+      deleteTodo({
+        id: todoId,
+      })
   }
   return (
     <ul className="grid grid-cols-1 gap-y-3">
@@ -121,6 +135,15 @@ export const TodoList = () => {
             >
               {todo.body}
             </label>
+            <button
+              className="flex items-center justify-center"
+              onClick={() => handleDeleteTodo(todo.id)}
+              disabled={isDeletingTodo}
+              title="Delete Todo"
+              type="button"
+            >
+              <XMarkIcon className="h-6 w-6 text-gray-700" />
+            </button>
           </div>
         </li>
       ))}
